@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func main() {
+func day1_1() int {
 	file, err := os.Open("inputs/day1_1.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -30,5 +30,9 @@ func main() {
 		val, _ := strconv.Atoi(string(first) + string(last))
 		sum += val
 	}
-	fmt.Println(sum)
+	return sum
+}
+
+func main() {
+	fmt.Println(day1_1())
 }
