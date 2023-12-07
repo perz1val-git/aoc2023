@@ -49,13 +49,74 @@ func day1() int {
 			}
 		}
 
-		val, _ := strconv.Atoi(string(first) + string(last))
+		val, err := strconv.Atoi(string(first) + string(last))
+		if err != nil {
+			log.Fatal(err)
+		}
 		sum += val
 	}
 	file.Close()
 	return sum
 }
 
+func day2(day2Part1 bool) int {
+	scanner, file := getScanner("inputs/day2.txt")
+	defer file.Close()
+
+	const maxRedCount, maxGreenCount, maxBlueCount int = 12, 13, 14
+	var redCount, greenCount, blueCount int
+	var gameHighestRedCount, gameHighestGreenCount, gameHighestBlueCount int
+	var possible bool
+	result := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		gameInfo := strings.Split(line, ": ")
+		gameSets := strings.Split(gameInfo[1], "; ")
+		possible = true
+		gameHighestRedCount, gameHighestGreenCount, gameHighestBlueCount = 0, 0, 0
+
+		for _, set := range gameSets {
+			redCount, greenCount, blueCount = 0, 0, 0
+			cubes := strings.Split(set, ", ")
+			for _, cube := range cubes {
+				cubeCount, _ := strconv.Atoi(strings.Split(cube, " ")[0])
+				if strings.Contains(cube, "red") {
+					redCount += cubeCount
+				} else if strings.Contains(cube, "green") {
+					greenCount += cubeCount
+				} else if strings.Contains(cube, "blue") {
+					blueCount += cubeCount
+				}
+			}
+			gameHighestRedCount = max(redCount, gameHighestRedCount)
+			gameHighestBlueCount = max(blueCount, gameHighestBlueCount)
+			gameHighestGreenCount = max(greenCount, gameHighestGreenCount)
+
+			if day2Part1 {
+				if redCount > maxRedCount || greenCount > maxGreenCount || blueCount > maxBlueCount {
+					possible = false
+					break
+				}
+			}
+		}
+
+		if day2Part1 {
+			if possible {
+				gameId, err := strconv.Atoi(strings.Split(gameInfo[0], " ")[1])
+				if err != nil {
+					log.Fatal(err)
+				}
+				result += gameId
+			}
+		} else {
+			result += gameHighestRedCount * gameHighestGreenCount * gameHighestBlueCount
+		}
+	}
+
+	return result
+}
+
 func main() {
-	fmt.Println(day1())
+	fmt.Println(day2(false))
 }
