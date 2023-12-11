@@ -117,6 +117,132 @@ func day2(day2Part1 bool) int {
 	return result
 }
 
+func day3() (int, int) {
+	type PotentialPartPos struct {
+		row   int
+		start int
+		end   int
+	}
+	type PotentialGearPos struct {
+		row int
+		col int
+	}
+	type gearValue struct {
+		adjacentparts int
+		gearRatio     int
+	}
+
+	scanner, file := getScanner("inputs/day3.txt")
+	defer file.Close()
+	rowNumber := 0
+
+	var schematic [][]rune
+	var potentialParts []PotentialPartPos
+	var currentPart *PotentialPartPos
+	inNumber := false
+	potentialGears := make(map[PotentialGearPos]gearValue)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		schematic = append(schematic, []rune(line))
+		for colNumber, character := range line {
+			if character >= '0' && character <= '9' && !inNumber {
+				inNumber = true
+				currentPart = new(PotentialPartPos)
+				currentPart.row = rowNumber
+				currentPart.start = colNumber
+			} else if (character < '0' || character > '9') && inNumber {
+				currentPart.end = colNumber - 1
+				potentialParts = append(potentialParts, *currentPart)
+				inNumber = false
+			}
+			if character == '*' {
+				potentialGears[PotentialGearPos{
+					rowNumber,
+					colNumber,
+				}] = gearValue{0, 1}
+			}
+		}
+		if inNumber {
+			currentPart.end = len(line) - 1
+			potentialParts = append(potentialParts, *currentPart)
+			inNumber = false
+		}
+		rowNumber++
+	}
+
+	partNumberSum := 0
+	checkSymbol := func(c rune) bool { return c != '.' && (c < '0' || c > '9') }
+	incrementGear := func(x int, y int, partNum int) {
+		gear := potentialGears[PotentialGearPos{x, y}]
+		gear.adjacentparts += 1
+		gear.gearRatio *= partNum
+		potentialGears[PotentialGearPos{x, y}] = gear
+	}
+
+	lastRow := len(schematic) - 1
+	lastCol := len(schematic[0]) - 1
+	var symbolFound bool
+
+	for _, part := range potentialParts {
+		symbolFound = false
+		partNum, _ := strconv.Atoi(
+			string(schematic[part.row][part.start : part.end+1]))
+
+		if part.start > 0 {
+			if checkSymbol(schematic[part.row][part.start-1]) {
+				symbolFound = true
+			}
+			if schematic[part.row][part.start-1] == '*' {
+				incrementGear(part.row, part.start-1, partNum)
+			}
+		}
+		if part.end < lastCol {
+			if checkSymbol(schematic[part.row][part.end+1]) {
+				symbolFound = true
+			}
+			if schematic[part.row][part.end+1] == '*' {
+				incrementGear(part.row, part.end+1, partNum)
+			}
+		}
+
+		start := max(part.start-1, 0)
+		end := min(part.end+1, lastCol)
+
+		for i := start; i <= end; i++ {
+			if part.row > 0 {
+				if checkSymbol(schematic[part.row-1][i]) {
+					symbolFound = true
+				}
+				if schematic[part.row-1][i] == '*' {
+					incrementGear(part.row-1, i, partNum)
+				}
+			}
+			if part.row < lastRow {
+				if checkSymbol(schematic[part.row+1][i]) {
+					symbolFound = true
+				}
+				if schematic[part.row+1][i] == '*' {
+					incrementGear(part.row+1, i, partNum)
+				}
+			}
+		}
+		if symbolFound {
+			partNumberSum += partNum
+		}
+	}
+
+	gearSum := 0
+
+	for _, potentialGear := range potentialGears {
+		if potentialGear.adjacentparts == 2 {
+			gearSum += potentialGear.gearRatio
+		}
+	}
+
+	return partNumberSum, gearSum
+}
+
 func main() {
-	fmt.Println(day2(false))
+	fmt.Println(day3())
 }
