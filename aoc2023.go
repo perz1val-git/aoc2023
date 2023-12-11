@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -243,6 +244,46 @@ func day3() (int, int) {
 	return partNumberSum, gearSum
 }
 
+func day4() int {
+	scanner, file := getScanner("inputs/day4.txt")
+	defer file.Close()
+
+	totalPoints := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		game := strings.Split(line, ":")
+		gameParts := strings.Split(game[1], "|")
+		gamePoints := 0
+
+		var gameNumbers []int
+		var winningNumbers []int
+
+		for _, number := range strings.Fields(gameParts[0]) {
+			num, _ := strconv.Atoi(number)
+			gameNumbers = append(gameNumbers, num)
+		}
+		for _, number := range strings.Fields(gameParts[1]) {
+			num, _ := strconv.Atoi(number)
+			winningNumbers = append(winningNumbers, num)
+		}
+
+		for _, number := range gameNumbers {
+			if slices.Contains(winningNumbers, number) {
+				if gamePoints > 0 {
+					gamePoints *= 2
+				} else {
+					gamePoints = 1
+				}
+			}
+		}
+
+		totalPoints += gamePoints
+	}
+
+	return totalPoints
+}
+
 func main() {
-	fmt.Println(day3())
+	fmt.Println(day4())
 }
